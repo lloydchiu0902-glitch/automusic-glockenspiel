@@ -1,0 +1,11 @@
+PyQt6
+flask
+bleak
+mido
+music21
+torch
+transformers
+numpy
+scikit-learn
+matplotlib
+tqdm

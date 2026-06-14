@@ -1,0 +1,3 @@
+Success: True
+Glock notes: 2
+Motor notes: 1
