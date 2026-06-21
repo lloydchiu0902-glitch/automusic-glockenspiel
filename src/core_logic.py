@@ -51,11 +51,9 @@ class NoteData:
         return n
 
 class AdvancedMidiProcessor:
-    """進階 AI 樂理與硬體適配管線 (結合 KS 滑動視窗與 Dijkstra 動態靠攏)"""
     
     @staticmethod
     def _music21_global_shift(notes: List[NoteData], valid_pitches: List[int]):
-        """步驟 1：基於 Music21 的決定性全域基底移調 (Stage 1)"""
         if not notes: return []
         
         try:
@@ -115,7 +113,6 @@ class AdvancedMidiProcessor:
 
     @staticmethod
     def _dijkstra_voice_leading(notes: List[NoteData], valid_pitches: List[int]):
-        """步驟 2：實作 TPS 與 Dijkstra 動態聲部靠攏 (利用 Viterbi 動態規劃解法)"""
         if not notes: return []
         
         black_keys = {1, 3, 6, 8, 10}
@@ -198,7 +195,6 @@ class AdvancedMidiProcessor:
 
     @staticmethod
     def process_midi_notes(file_path, raw_notes: List[NoteData], valid_pitches: List[int], skip_motor_split=False):
-        """整合第一階段之改良演算法"""
         if not HAS_MUSIC21:
             raise ImportError("請安裝 music21 進行進階樂理分析: pip install music21")
 
@@ -306,7 +302,6 @@ class GlockenspielPhysics:
     def calculate_trigger_time(self, note_time_us): return max(0, note_time_us - self.get_total_delay_us())
 
     def filter_dense_notes(self, notes: List[NoteData]):
-        """Stage 3: 實體硬體特徵感知 (過濾低於 60ms 之脈衝)"""
         filtered = []
         track_last_time = {}
         for n in notes:
@@ -340,7 +335,6 @@ class StepperMotorProfiler:
         if burst_accel is not None: self.burst_accel = burst_accel
         
     def check_and_fold_pitch(self, pitch: int) -> int:
-        """Stage 3: 步進馬達共振頻帶八度折疊防護"""
         rpm = int((440.0 * (2.0 ** ((pitch - 69) / 12.0))) * 0.3)
         min_f, max_f = self.resonance_band
         if min_f <= rpm <= max_f:
