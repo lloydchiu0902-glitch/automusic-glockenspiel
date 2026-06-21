@@ -65,7 +65,6 @@ class AdvancedMidiProcessor:
         shifted_notes = [n.clone() for n in notes]
         
         if not HAS_M21:
-            # Fallback if music21 is not available
             best_shift = 0
             max_score = -1
             black_keys = {1, 3, 6, 8, 10}
@@ -76,7 +75,6 @@ class AdvancedMidiProcessor:
             for n in shifted_notes: n.pitch += best_shift
             return shifted_notes
 
-        # 使用 music21 進行調性分析
         stream = music21.stream.Stream()
         for n in shifted_notes:
             try:
@@ -93,7 +91,6 @@ class AdvancedMidiProcessor:
         max_white_ratio = -1
         black_keys = {1, 3, 6, 8, 10}
 
-        # 窮舉 12 個半音階，利用 Interval 計算平移
         for shift_val in range(-6, 6):
             white_count = 0
             for n in shifted_notes:
@@ -105,7 +102,6 @@ class AdvancedMidiProcessor:
                 max_white_ratio = white_count
                 best_shift = shift_val
 
-        # 應用最佳移調
         for n in shifted_notes:
             n.pitch += best_shift
             
@@ -118,21 +114,16 @@ class AdvancedMidiProcessor:
         black_keys = {1, 3, 6, 8, 10}
         white_keys = [p for p in range(21, 109) if p % 12 not in black_keys]
         
-        # 依時間排序建立序列
         notes.sort(key=lambda x: x.t_note_us)
         
-        # 建立候選節點矩陣 (Trellis)
         candidates_lattice = []
         for n in notes:
             if n.pitch % 12 not in black_keys and n.pitch in valid_pitches:
-                candidates_lattice.append([n.pitch]) # 已是白鍵，無需映射
+                candidates_lattice.append([n.pitch])
             else:
-                # 尋找最近的 2~3 個白鍵作為候選節點
                 cands = sorted(white_keys, key=lambda x: abs(x - n.pitch))[:3]
                 candidates_lattice.append(cands)
 
-        # 動態規劃 (Viterbi) 尋找最低成本路徑
-        # dp[i][cand] = (min_cost, prev_cand)
         dp = [{c: (abs(c - notes[0].pitch) * 2, None) for c in candidates_lattice[0]}]
         
         for i in range(1, len(notes)):
@@ -144,21 +135,16 @@ class AdvancedMidiProcessor:
                 best_cost = float('inf')
                 best_prev = None
                 
-                # 成本 3: 忠誠度成本 (Fidelity) - 距離原始音高的誤差
                 fidelity_cost = abs(c - notes[i].pitch) * 2
                 
                 for p_c in prev_cands:
                     prev_cost, _ = dp[i-1][p_c]
                     
-                    # 成本 1: 聲部移動距離 (Voice Leading) - 計程車幾何
                     voice_leading_cost = abs(c - p_c)
                     
-                    # 成本 2: 簡化版 TPS (Tonal Pitch Space) 和聲成本
-                    # Include C Major (C,E,G) and G Major (G,B,D) chord tones for Glockenspiel
                     is_chord_tone = (c % 12) in {0, 2, 4, 7, 11}
                     tps_cost = 0 if is_chord_tone else 2 
                     
-                    # 成本 4: 旋律輪廓成本 (Contour) - 保持旋律的上下起伏方向
                     orig_delta = notes[i].pitch - notes[i-1].pitch
                     cand_delta = c - p_c
                     contour_cost = 0
@@ -177,7 +163,6 @@ class AdvancedMidiProcessor:
                 current_dp[c] = (best_cost, best_prev)
             dp.append(current_dp)
             
-        # 回溯找出最佳路徑 (Backtracking)
         best_final_cand = min(dp[-1].keys(), key=lambda k: dp[-1][k][0])
         optimal_path = [best_final_cand]
         
@@ -187,7 +172,6 @@ class AdvancedMidiProcessor:
             
         optimal_path.reverse()
         
-        # 套用最佳路徑
         for i, n in enumerate(notes):
             n.pitch = optimal_path[i]
             
@@ -198,10 +182,8 @@ class AdvancedMidiProcessor:
         if not HAS_MUSIC21:
             raise ImportError("請安裝 music21 進行進階樂理分析: pip install music21")
 
-        # 1. 決定性全域基底移調 (Stage 1)
         shifted_notes = AdvancedMidiProcessor._music21_global_shift(raw_notes, valid_pitches)
         
-        # 簡易的高低音軌分離 (防止低音被硬折疊到鐵琴產生雜音)
         melody_notes, motor_notes = [], []
         if shifted_notes:
             if skip_motor_split:
@@ -211,17 +193,15 @@ class AdvancedMidiProcessor:
             else:
                 avg_p = sum(n.pitch for n in shifted_notes) / len(shifted_notes)
                 for n in shifted_notes:
-                    if n.pitch < avg_p - 10:  # 顯著低於平均音高的當作伴奏馬達
+                    if n.pitch < avg_p - 10:
                         n.is_motor = True
                         motor_notes.append(n)
                     else:
                         n.is_motor = False
                         melody_notes.append(n)
         
-        # 2. Dijkstra 動態聲部靠攏 (只處理鐵琴軌道)
         mapped_melody = AdvancedMidiProcessor._dijkstra_voice_leading(melody_notes, valid_pitches)
 
-        # 3. 鐵琴全域八度平移 (Global Octave Shift) 與例外折疊
         if mapped_melody:
             avg_melody = sum(n.pitch for n in mapped_melody) / len(mapped_melody)
             glock_center = 91
@@ -235,7 +215,6 @@ class AdvancedMidiProcessor:
                 while n.pitch > target_max: n.pitch -= 12
                 while n.pitch < target_min: n.pitch += 12
                 
-        # 4. 馬達低頻處理
         if motor_notes:
             avg_motor = sum(n.pitch for n in motor_notes) / len(motor_notes)
             m_shift = round((45 - avg_motor) / 12)
@@ -243,7 +222,6 @@ class AdvancedMidiProcessor:
                 n.pitch += int(m_shift * 12)
                 while n.pitch >= min(valid_pitches): n.pitch -= 12
 
-        # 合併與複音處理
         final_mapped = mapped_melody + motor_notes
         final_mapped.sort(key=lambda x: x.t_note_us)
         
