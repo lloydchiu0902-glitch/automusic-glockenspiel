@@ -20,25 +20,24 @@ class ImportMidiDialog(QDialog):
         self.file_path = ""
         
         layout = QVBoxLayout(self)
-        group = QGroupBox("請選擇 MIDI 匯入模式")
+        group = QGroupBox("匯入模式")
         v = QVBoxLayout()
         
-        self.r1 = QRadioButton("單獨匯入：僅作鐵琴音軌 (保留現有馬達)")
-        self.r2 = QRadioButton("單獨匯入：僅作馬達音軌 (保留現有鐵琴)")
-        self.r3 = QRadioButton("本機運算：滑動視窗 KS 與 Dijkstra 動態靠攏")
-        self.r4 = QRadioButton("統一匯入：依 MIDI 樂器區分 (Bass/Drum 交由馬達)")
-        self.r5 = QRadioButton("雲端微服務：MidiBERT 深度音樂重構 (需啟動 API)")
+        self.r1 = QRadioButton("僅鐵琴音軌 (保留現有馬達)")
+        self.r2 = QRadioButton("僅馬達音軌 (保留現有鐵琴)")
+        self.r4 = QRadioButton("智慧分軌 (依 MIDI 樂器)")
+        self.r5 = QRadioButton("MidiBERT")
         self.r5.setStyleSheet("color: #a855f7; font-weight: bold;")
-        self.r3.setChecked(True) 
+        self.r5.setChecked(True) 
         
-        for r in [self.r1, self.r2, self.r3, self.r4, self.r5]: 
+        for r in [self.r1, self.r2, self.r4, self.r5]: 
             v.addWidget(r)
             
         group.setLayout(v)
         layout.addWidget(group)
         
         btn_layout = QHBoxLayout()
-        self.btn_sel = QPushButton("選擇檔案並匯入")
+        self.btn_sel = QPushButton("選擇檔案")
         self.btn_sel.setStyleSheet("background-color: #3b82f6; font-weight: bold; padding: 8px;")
         self.btn_sel.clicked.connect(self.select_file)
         btn_layout.addStretch()
@@ -51,10 +50,90 @@ class ImportMidiDialog(QDialog):
             self.file_path = f
             if self.r1.isChecked(): self.mode = "glock_only"
             elif self.r2.isChecked(): self.mode = "motor_only"
-            elif self.r3.isChecked(): self.mode = "unified_ai"
             elif self.r4.isChecked(): self.mode = "unified_inst"
             elif self.r5.isChecked(): self.mode = "ai_midibert"
             self.accept()
+
+class TutorialDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("新手教學")
+        self.resize(500, 350)
+        if parent: self.setStyleSheet(parent.styleSheet())
+        
+        self.steps = [
+            {
+                "title": "第一步：匯入歌曲",
+                "desc": "點擊上方工具列的「匯入 MIDI」按鈕，選擇一首 MIDI 歌曲。\n\n建議選擇 MidiBERT 模式，或選擇使用已存歌曲。"
+            },
+            {
+                "title": "第二步：連接硬體",
+                "desc": "在工具列右側確認自動鐵琴機的 MAC 地址無誤後，點擊「連線 BLE」。\n\n如果連線成功，系統將準備好傳送音符指令給實體鐵琴機與馬達系統。"
+            },
+            {
+                "title": "第三步：開始演奏",
+                "desc": "一切準備就緒後，點擊左上角的「播放/暫停」按鈕，或按下空白鍵，即可開始自動演奏！\n\n右側會即時顯示琴鍵敲擊的視覺化動畫與馬達震動反饋。"
+            }
+        ]
+        self.current_step = 0
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(30, 40, 30, 30)
+        
+        self.lbl_title = QLabel()
+        self.lbl_title.setStyleSheet("font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 10px;")
+        layout.addWidget(self.lbl_title)
+        
+        self.lbl_desc = QLabel()
+        self.lbl_desc.setWordWrap(True)
+        self.lbl_desc.setStyleSheet("font-size: 15px; color: #d1d1d6; line-height: 1.5;")
+        self.lbl_desc.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(self.lbl_desc, stretch=1)
+        
+        self.lbl_progress = QLabel()
+        self.lbl_progress.setStyleSheet("font-size: 12px; color: #636366;")
+        self.lbl_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.lbl_progress)
+        
+        btn_layout = QHBoxLayout()
+        self.btn_prev = QPushButton("上一步")
+        self.btn_prev.clicked.connect(self.prev_step)
+        
+        self.btn_next = QPushButton("下一步")
+        self.btn_next.setStyleSheet("background-color: #0a84ff; color: white; font-weight: bold;")
+        self.btn_next.clicked.connect(self.next_step)
+        
+        btn_layout.addWidget(self.btn_prev)
+        btn_layout.addStretch()
+        btn_layout.addWidget(self.btn_next)
+        
+        layout.addLayout(btn_layout)
+        
+        self.update_ui()
+        
+    def prev_step(self):
+        if self.current_step > 0:
+            self.current_step -= 1
+            self.update_ui()
+            
+    def next_step(self):
+        if self.current_step < len(self.steps) - 1:
+            self.current_step += 1
+            self.update_ui()
+        else:
+            self.accept()
+            
+    def update_ui(self):
+        step_data = self.steps[self.current_step]
+        self.lbl_title.setText(step_data["title"])
+        self.lbl_desc.setText(step_data["desc"])
+        self.lbl_progress.setText(f"{self.current_step + 1} / {len(self.steps)}")
+        
+        self.btn_prev.setVisible(self.current_step > 0)
+        if self.current_step == len(self.steps) - 1:
+            self.btn_next.setText("開始使用")
+        else:
+            self.btn_next.setText("下一步")
 
 MAC_DARK_QSS = """
 QWidget { background-color: #121212; color: #e0e0e0; font-family: -apple-system, 'San Francisco', 'Helvetica Neue', 'Segoe UI', sans-serif; }
@@ -82,7 +161,7 @@ QTextEdit { background-color: #000000; border: 1px solid #2c2c2e; border-radius:
 QSplitter::handle { background-color: #2c2c2e; height: 1px; }
 """
 
-class CastellaView(QMainWindow):
+class AutoMusicView(QMainWindow):
     sig_play_clicked = pyqtSignal(bool)
     sig_stop_clicked = pyqtSignal()
     sig_import_midi_advanced = pyqtSignal(str, str) 
@@ -109,7 +188,7 @@ class CastellaView(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Castella Control Center - 專業 DAW 音訊工作站版")
+        self.setWindowTitle("自動鐵琴機")
         self.resize(1400, 900)
         self.setStyleSheet(MAC_DARK_QSS)
         self.setup_ui()
@@ -148,13 +227,16 @@ class CastellaView(QMainWindow):
         self.combo_library = QComboBox(); self.combo_library.addItem("--- 選擇已存歌曲 ---")
         self.btn_manage_songs = QPushButton("管理")
         self.btn_save_song = QPushButton("儲存")
-        self.btn_export_web = QPushButton("匯出網頁檔"); self.btn_export_web.setObjectName("exportBtn")
+        self.btn_export_web = QPushButton("匯出網頁"); self.btn_export_web.setObjectName("exportBtn")
         self.input_mac = QLineEdit("88:4A:EA:62:C8:87"); self.input_mac.setFixedWidth(130)
         self.btn_ble = QPushButton("連線 BLE")
         self.btn_disconnect = QPushButton("斷開")
         self.btn_settings = QPushButton("硬體設定")
+        self.btn_tutorial = QPushButton("新手教學")
+        self.btn_tutorial.setStyleSheet("background-color: #0a84ff; color: white; font-weight: bold;")
+        self.btn_tutorial.clicked.connect(self.show_tutorial)
         
-        for w in [self.btn_play, self.btn_stop, QLabel("速度:"), self.combo_speed, self.chk_mute_glock, self.chk_mute_motor, self.btn_import, self.combo_library, self.btn_manage_songs, self.btn_save_song, self.btn_export_web, self.input_mac, self.btn_ble, self.btn_disconnect, self.btn_settings]:
+        for w in [self.btn_play, self.btn_stop, QLabel("速度:"), self.combo_speed, self.chk_mute_glock, self.chk_mute_motor, self.btn_import, self.combo_library, self.btn_manage_songs, self.btn_save_song, self.btn_export_web, self.input_mac, self.btn_ble, self.btn_disconnect, self.btn_settings, self.btn_tutorial]:
             r1.addWidget(w)
         r1.addStretch()
         left_lyt.addLayout(r1)
@@ -176,8 +258,7 @@ class CastellaView(QMainWindow):
         self.chk_motors = [QCheckBox(f"M{i}") for i in range(4)]
         for c in self.chk_motors: c.setChecked(True)
 
-        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val, QLabel("延音:"), self.slider_sustain, self.lbl_sustain_val,
-                  QLabel("琶音:"), self.slider_arp_speed, self.lbl_arp_speed, QLabel("閘門:"), self.slider_gate_time, self.lbl_gate_time,
+        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val,
                   self.lbl_hit_rate, self.combo_mode] + self.chk_motors:
             r3.addWidget(w)
         r3.addStretch()
@@ -202,24 +283,37 @@ class CastellaView(QMainWindow):
         
         lbl_glock = QLabel("  鐵琴音軌 (Solenoids) - [Ctrl+滾輪] 縮放, [Q] 量化對齊")
         lbl_glock.setStyleSheet("color: #e0e0e0; font-weight: 500; font-size: 13px; padding: 6px; border-bottom: 1px solid #2c2c2e;")
-        midi_lyt.addWidget(lbl_glock)
         
         self.piano_view_glock = PianoRollView(show_safe_zone=True)
-        self.piano_view_glock.setStyleSheet("background-color: #121212; border: none; border-bottom: 1px solid #2c2c2e;")
+        self.piano_view_glock.setStyleSheet("background-color: #121212; border: none; border-right: 1px solid #2c2c2e;")
         
         self.time_ruler = TimeRulerWidget(self.piano_view_glock)
         self.piano_view_glock.sig_zoom_changed.connect(lambda _: self.time_ruler.update())
-        midi_lyt.addWidget(self.time_ruler)
-        
-        midi_lyt.addWidget(self.piano_view_glock, 1)
         
         lbl_motor = QLabel("  馬達音軌 (Motors)")
         lbl_motor.setStyleSheet("color: #e0e0e0; font-weight: 500; font-size: 13px; padding: 6px; border-bottom: 1px solid #2c2c2e;")
-        midi_lyt.addWidget(lbl_motor)
         
         self.piano_view_motor = PianoRollView(show_safe_zone=False)
         self.piano_view_motor.setStyleSheet("background-color: #121212; border: none;")
-        midi_lyt.addWidget(self.piano_view_motor, 1)
+
+        tracks_layout = QHBoxLayout()
+        
+        left_track_lyt = QVBoxLayout()
+        left_track_lyt.setContentsMargins(0, 0, 0, 0)
+        left_track_lyt.addWidget(lbl_glock)
+        left_track_lyt.addWidget(self.time_ruler)
+        left_track_lyt.addWidget(self.piano_view_glock, 1)
+        
+        right_track_lyt = QVBoxLayout()
+        right_track_lyt.setContentsMargins(0, 0, 0, 0)
+        right_track_lyt.addWidget(lbl_motor)
+        # Note: we might want another time ruler for the right track, but for now we keep it simple
+        right_track_lyt.addWidget(self.piano_view_motor, 1)
+        
+        tracks_layout.addLayout(left_track_lyt, 1)
+        tracks_layout.addLayout(right_track_lyt, 1)
+        
+        midi_lyt.addLayout(tracks_layout, 1)
 
         self.piano_view_glock.horizontalScrollBar().valueChanged.connect(self.piano_view_motor.horizontalScrollBar().setValue)
         self.piano_view_motor.horizontalScrollBar().valueChanged.connect(self.piano_view_glock.horizontalScrollBar().setValue)
@@ -316,6 +410,13 @@ class CastellaView(QMainWindow):
         self._emit_config()
 
     def _on_transpose_slider_changed(self, val): self.lbl_transpose_val.setText(f"{val:+}"); self._emit_config()
+    def set_sustain_val(self, val):
+        self.lbl_sustain_val.setText(f"{val:.1f}x")
+
+    def show_tutorial(self):
+        dlg = TutorialDialog(self)
+        dlg.exec()
+
     def _on_sustain_change(self, val): mult = val / 10.0; self.lbl_sustain_val.setText(f"{mult:.1f}x"); self.sig_sustain_changed.emit(mult)
     def _on_arp_speed_change(self, val): self.lbl_arp_speed.setText(f"{val}ms"); self._emit_config()
     def _on_gate_time_change(self, val): self.lbl_gate_time.setText(f"{val}%"); self._emit_config()

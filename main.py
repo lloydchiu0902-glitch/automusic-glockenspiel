@@ -6,9 +6,9 @@ from PyQt6.QtWidgets import QApplication
 # pyrefly: ignore [missing-import]
 from PyQt6.QtCore import Qt
 
-from model import CastellaModel
-from view import CastellaView
-from presenter import CastellaPresenter
+from model import AutoMusicModel
+from view import AutoMusicView
+from presenter import AutoMusicPresenter
 
 if __name__ == '__main__':
     # 開啟高解析度螢幕支援
@@ -27,9 +27,9 @@ if __name__ == '__main__':
     gc.set_threshold(50000, gen1, gen2)
 
     # 建立 MVP 三本柱
-    model = CastellaModel()
-    view = CastellaView()
-    presenter = CastellaPresenter(model, view)
+    model = AutoMusicModel()
+    view = AutoMusicView()
+    presenter = AutoMusicPresenter(model, view)
     
     # 啟動介面
     view.show()

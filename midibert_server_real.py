@@ -24,9 +24,9 @@ DICT_PATH = os.path.join(BASE_DIR, "dict", "CP.pkl")
 MIDIBERT_LIB_PATH = os.path.join(BASE_DIR, "MidiBERT")
 
 
-class CastellaMelodyModel(nn.Module):
+class AutoMusicMelodyModel(nn.Module):
     """
-    Neural network architecture for Castella Control Center.
+    Neural network architecture for 自動鐵琴機 Control Center.
     Wraps the core MidiBert with a classification head to distinguish melody vs accompaniment.
     """
     def __init__(self, midibert_core):
@@ -84,7 +84,7 @@ class ModelLoader:
             )
 
             midibert_core = MidiBert(bertConfig=bert_config, e2w=self.cp_dict[0], w2e=self.cp_dict[1])
-            self.ai_model = CastellaMelodyModel(midibert_core)
+            self.ai_model = AutoMusicMelodyModel(midibert_core)
 
             if os.path.exists(MODEL_PATH):
                 logging.info("Loading pre-trained weights into the model.")
@@ -262,5 +262,5 @@ def reduce_notes():
 
 
 if __name__ == '__main__':
-    logging.info("Castella Hybrid AI Server initializing on port 5000.")
+    logging.info("自動鐵琴機 Hybrid AI Server initializing on port 5000.")
     app.run(port=5000)

@@ -76,7 +76,7 @@ def translate_notes_to_cp_tensor(notes):
     這就是我們的翻譯機！
     它負責把 {"pitch": 60, "t_note_us": 1000} 轉換成 AI 看得懂的矩陣
     """
-    print("🔍 [翻譯機] 正在將 Castella 音符轉換為 CP Token 矩陣...")
+    print("🔍 [翻譯機] 正在將 自動鐵琴機 音符轉換為 CP Token 矩陣...")
     # 這裡未來會放入幾十行的量化 (Quantization) 與查表邏輯
     # 目前先回傳一個假的矩陣形狀，證明管線通暢
     dummy_tensor = torch.zeros((1, len(notes), 4), dtype=torch.long)
@@ -179,6 +179,6 @@ def reduce_notes():
 
 if __name__ == '__main__':
     print("==================================================")
-    print("🚀 Castella Hybrid AI Server 正在 Port 5000 運行中")
+    print("🚀 自動鐵琴機 Hybrid AI Server 正在 Port 5000 運行中")
     print("==================================================")
     app.run(port=5000)

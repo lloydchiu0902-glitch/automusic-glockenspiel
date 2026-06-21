@@ -117,13 +117,17 @@ class MidiBERTMicroserviceClient:
             with urllib.request.urlopen(req, timeout=120.0) as response:
                 if response.status == 200:
                     resp_data = json.loads(response.read().decode('utf-8'))
-                    return [NoteData.from_dict(d) for d in resp_data]
+                    if isinstance(resp_data, dict):
+                        notes_data = resp_data.get('notes', [])
+                    else:
+                        notes_data = resp_data
+                    return [NoteData.from_dict(d) for d in notes_data]
                 else:
                     raise Exception(f"微服務回應異常: HTTP {response.status}")
         except urllib.error.URLError as e:
             raise ConnectionError(f"無法連線至 MidiBERT 服務...\n詳細錯誤: {str(e)}")
 
-class CastellaModel:
+class AutoMusicModel:
     def __init__(self):
         self.physics = GlockenspielPhysics()
         self.motor_profiler = StepperMotorProfiler()

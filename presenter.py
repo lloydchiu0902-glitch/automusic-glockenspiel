@@ -7,7 +7,7 @@ from audio_synth import GlockenspielSynthesizer, MotorSynthesizer
 from workers import BLEWorker, PlaybackWorker
 from core_logic import NoteData, StepperMotorProfiler
 
-class CastellaPresenter(QObject):
+class AutoMusicPresenter(QObject):
     def __init__(self, model, view):
         super().__init__()
         self.model = model

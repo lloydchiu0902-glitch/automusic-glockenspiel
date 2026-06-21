@@ -1,7 +1,7 @@
 import mido
-from model import CastellaModel
+from model import AutoMusicModel
 
-model = CastellaModel()
+model = AutoMusicModel()
 mid = mido.MidiFile()
 track = mido.MidiTrack()
 mid.tracks.append(track)

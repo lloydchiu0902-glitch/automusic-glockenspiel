@@ -17,7 +17,7 @@ async def scan_devices():
         print(f"Name: {name:<20} | MAC: {d.address}")
     print("-" * 50)
     print("\nLook for devices like 'HMSoft', 'BT05', 'JDY-18', or 'DSD TECH'.")
-    print("Copy the MAC address to the Castella input field.")
+    print("Copy the MAC address to the 自動鐵琴機 input field.")
 
 if __name__ == "__main__":
     asyncio.run(scan_devices())

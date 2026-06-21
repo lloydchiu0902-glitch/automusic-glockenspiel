@@ -1,11 +1,11 @@
-# Castella Control Center
+# 自動鐵琴機控制中心
 **實體自動化樂器之網宇實體展演系統架構與 AI 降維改編模型深度技術規格書**
 
 ---
 
 ## 一、 摘要 (Abstract)
 
-「Castella Control Center」為一針對自動化實體樂器（包含 15 音階實體鐵琴與 4 軌共振步進馬達陣列）所設計之專業網宇實體（Cyber-Physical Systems, CPS）數位音訊工作站（DAW）。在當代音樂資訊檢索（MIR）與機電整合領域中，將虛擬、無發聲限制的數位音樂數據（如 MIDI）映射至受限的物理硬體，存在極大的「維度縮減（Dimensionality Reduction）」與「物理干涉（Physical Interference）」挑戰。本系統不僅提供完整的非同步圖形化編輯介面與時間軸排程器，更內建了基於 `music21` 的樂理降維演算、Dijkstra 動態聲部靠攏演算法，以及基於 MidiBERT 的神經網路微服務。搭配自主研發的環形緩衝（Ring Buffer）與藍牙 BLE 序列化通訊協定，系統能以極低延遲（<20ms）的精度，將龐大且複雜的交響樂譜重組並完美驅動實體樂器進行即時物理展演。
+「自動鐵琴機控制中心」為一針對自動化實體樂器（包含 15 音階實體鐵琴與 4 軌共振步進馬達陣列）所設計之專業網宇實體（Cyber-Physical Systems, CPS）數位音訊工作站（DAW）。在當代音樂資訊檢索（MIR）與機電整合領域中，將虛擬、無發聲限制的數位音樂數據（如 MIDI）映射至受限的物理硬體，存在極大的「維度縮減（Dimensionality Reduction）」與「物理干涉（Physical Interference）」挑戰。本系統不僅提供完整的非同步圖形化編輯介面與時間軸排程器，更內建了基於 `music21` 的樂理降維演算、Dijkstra 動態聲部靠攏演算法，以及基於 MidiBERT 的神經網路微服務。搭配自主研發的環形緩衝（Ring Buffer）與藍牙 BLE 序列化通訊協定，系統能以極低延遲（<20ms）的精度，將龐大且複雜的交響樂譜重組並完美驅動實體樂器進行即時物理展演。
 
 ---
 
@@ -65,14 +65,14 @@
 ### 4.3 數據層與通訊層 (`model.py`)
 - **`UnifiedBLESerializer` 類別**：客製化 BLE 二進位封包建構器。採用 16-byte 定長封包設計，第一位元組做為 Command Type，結尾附帶 `calc_crc16` 產生之 2-byte 校驗碼。內建 `_get_buffer` 環形緩衝池以避免記憶體碎裂。
 - **`MidiBERTMicroserviceClient` 類別**：微服務網路客戶端，以 HTTP POST 發送 JSON 至 MidiBERT 後端進行深度神經網路推理。
-- **`CastellaModel` 類別**：系統唯一之資料真實來源 (Single Source of Truth)。管理系統配置檔 (Config)、`all_notes` 清單、Undo/Redo Stack，並透過 `re_route_all` 負責執行音符至硬體的最終派發與合法性檢核。
+- **`AutoMusicModel` 類別**：系統唯一之資料真實來源 (Single Source of Truth)。管理系統配置檔 (Config)、`all_notes` 清單、Undo/Redo Stack，並透過 `re_route_all` 負責執行音符至硬體的最終派發與合法性檢核。
 
 ### 4.4 視圖層 (`view.py`)
 - **`ImportMidiDialog` 類別**：負責擷取使用者所選擇之 AI 降維模式（如 `unified_ai`、`ai_midibert` 等）。
-- **`CastellaView` 類別**：繼承自 `QMainWindow` 之主視窗。負責排版所有 UI 模組，將所有的按鍵點擊、滑鼠事件封裝為語義化的 PyQt Signals（如 `sig_req_play`, `sig_notes_changed`），並暴露 `render_notes`、`update_playhead` 等 API 供 Presenter 呼叫。
+- **`AutoMusicView` 類別**：繼承自 `QMainWindow` 之主視窗。負責排版所有 UI 模組，將所有的按鍵點擊、滑鼠事件封裝為語義化的 PyQt Signals（如 `sig_req_play`, `sig_notes_changed`），並暴露 `render_notes`、`update_playhead` 等 API 供 Presenter 呼叫。
 
 ### 4.5 介面邏輯控制器 (`presenter.py`)
-- **`CastellaPresenter` 類別**：軟體的心臟。在 `_connect_signals` 中將所有的 Model 變更與 View 事件綁定。管理 `BLEWorker` 與 `PlaybackWorker` 的生命週期。具備完善的狀態機邏輯以處理連線狀態（Connecting, Connected, Disconnected）與播放狀態的切換。
+- **`AutoMusicPresenter` 類別**：軟體的心臟。在 `_connect_signals` 中將所有的 Model 變更與 View 事件綁定。管理 `BLEWorker` 與 `PlaybackWorker` 的生命週期。具備完善的狀態機邏輯以處理連線狀態（Connecting, Connected, Disconnected）與播放狀態的切換。
 
 ### 4.6 客製化圖形元件 (`ui_widgets.py` & `motor_widget.py`)
 - **`PianoRollView` 類別** (`ui_widgets.py`)：繼承自 `QGraphicsView` 的高效能 2D 繪圖引擎。精確繪製黑白鍵背景網格、節拍線與鐵琴專屬安全音域（綠色框線）。覆寫了滑鼠中鍵與滾輪事件以實現如商業 DAW 般的無縫平移與縮放體驗。
@@ -92,6 +92,6 @@
 
 ## 五、 結論與未來展望 (Conclusion and Future Work)
 
-Castella Control Center 透過嚴謹之軟體工程架構（MVP）、無鎖環形佇列（Lock-free Ring Buffer）與高容錯藍牙協定，成功消弭了虛擬軟體與實體硬體間之非同步通訊壁壘。而其引入之基於 Music21 與 Dijkstra 最佳化之網宇實體降維模型，更使得任意結構的數位鋼琴曲譜，皆能以極低的資訊熵損失轉化為受限硬體上的優雅物理展演。
+自動鐵琴機控制中心 透過嚴謹之軟體工程架構（MVP）、無鎖環形佇列（Lock-free Ring Buffer）與高容錯藍牙協定，成功消弭了虛擬軟體與實體硬體間之非同步通訊壁壘。而其引入之基於 Music21 與 Dijkstra 最佳化之網宇實體降維模型，更使得任意結構的數位鋼琴曲譜，皆能以極低的資訊熵損失轉化為受限硬體上的優雅物理展演。
 
 本系統高度模組化的架構與完善的物理避險機制，已為自動化樂器控制樹立了技術標竿。未來的研究與開發將著重於橫向擴展，計畫整合更高維度與不同發聲原理的樂器矩陣（如自動鼓機、機械弦樂器或管風琴陣列），進一步拓展網宇實體音樂藝術的展演邊界。

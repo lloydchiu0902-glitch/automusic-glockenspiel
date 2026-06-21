@@ -12,7 +12,7 @@ class GlockenspielSynthesizer:
     """純軟體動態波形合成器，產生帶有物理敲擊感的鐵琴聲音"""
     def __init__(self):
         self.sounds: Dict[int, QSoundEffect] = {}
-        self.temp_dir = os.path.join(tempfile.gettempdir(), "castella_sounds")
+        self.temp_dir = os.path.join(tempfile.gettempdir(), "automusic_sounds")
         os.makedirs(self.temp_dir, exist_ok=True)
         
     def _generate_wav(self, pitch: int, filepath: str):
@@ -57,7 +57,7 @@ class MotorSynthesizer:
     """純軟體動態波形合成器，產生類似步進馬達的方波 (Square Wave) 蜂鳴聲"""
     def __init__(self):
         self.sounds: Dict[int, QSoundEffect] = {}
-        self.temp_dir = os.path.join(tempfile.gettempdir(), "castella_motor_sounds")
+        self.temp_dir = os.path.join(tempfile.gettempdir(), "automusic_motor_sounds")
         os.makedirs(self.temp_dir, exist_ok=True)
         
     def _generate_wav(self, pitch: int, filepath: str):
