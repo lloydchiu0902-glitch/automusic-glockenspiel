@@ -170,7 +170,7 @@ class SemanticLabeler:
         for i, note in enumerate(notes):
             pred_class = ai_predictions[i] if i < len(ai_predictions) else 3
             
-            # ⭐️【關鍵調音台】：如果主旋律聽起來反了，把這裡的 2 改成 3
+            # 主旋律調整
             if pred_class == 2:  
                 melody_candidates.append(note)
             else:
@@ -194,7 +194,7 @@ class SemanticLabeler:
                 max_score = current_score
                 best_shift = shift
 
-        # 🌟 關鍵修改：手動升降 KEY (移調)
+        # 手動移調
         # 數值 1 = 升半音, 2 = 升全音 (一個 Key), 12 = 升八度
         MANUAL_KEY_SHIFT = 12  
         best_shift += MANUAL_KEY_SHIFT
@@ -202,7 +202,7 @@ class SemanticLabeler:
 
         final_notes = []
         
-        # 🌟 1. 鐵琴軌道：強迫升降八度與溢位防護 (G5~G7)
+        # 鐵琴軌道：音域限制
         for note in melody_candidates:
             shifted_pitch = note.get("pitch", 60) + best_shift
             
@@ -224,7 +224,7 @@ class SemanticLabeler:
                 note["is_motor"] = True
                 final_notes.append(note)
 
-        # 🌟 2. 馬達軌道：將伴奏降至鐵琴音域之下，營造低頻鋪底
+        # 馬達軌道：伴奏降音
         for note in motor_bass_pad:
             pitch = note.get("pitch", 60) + best_shift
             

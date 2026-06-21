@@ -14,12 +14,12 @@ class SciFiMotorWidget(QWidget):
 
         self.setMinimumSize(140, 160)
         
-        # 60 FPS 獨立重繪計時器
+        # 重繪計時器
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_rotation)
         self.timer.start(16) 
 
-        # 物理抖動動畫引擎
+        # 動畫引擎
         self._shake_offset = QPoint(0, 0)
         self._shake_anim = QPropertyAnimation(self, b"shake_offset")
         self._shake_anim.setEasingCurve(QEasingCurve.Type.InOutBounce)
@@ -40,7 +40,7 @@ class SciFiMotorWidget(QWidget):
 
     def update_rotation(self):
         if self.hz > 0:
-            # 依據 Hz 動態計算旋轉角度 (除以一個常數讓視覺看起來舒服)
+            # 依據 Hz 計算旋轉角度
             self.angle = (self.angle + self.hz * 0.15) % 360
             self.update()
         elif self.angle != 0:
@@ -62,16 +62,16 @@ class SciFiMotorWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # 加上抖動偏移量
+        # 加上偏移量
         cx = self.width() / 2 + self._shake_offset.x()
         cy = self.height() / 2 - 15 + self._shake_offset.y()
         radius = 45
 
-        # 1. 繪製 MIDI 力度映射光暈 (Neon Glow)
+        # 繪製光暈
         if self.hz > 0:
             glow_radius = radius + 15 + (self.velocity / 127.0) * 20
             grad = QRadialGradient(cx, cy, glow_radius)
-            # 正常為科技綠，危險為警示紅
+            # 綠色與紅色
             base_color = QColor(225, 29, 72) if self.is_alert else QColor(16, 185, 129)
             grad.setColorAt(0, QColor(base_color.red(), base_color.green(), base_color.blue(), 120))
             grad.setColorAt(1, QColor(base_color.red(), base_color.green(), base_color.blue(), 0))
@@ -79,12 +79,12 @@ class SciFiMotorWidget(QWidget):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawEllipse(QPoint(int(cx), int(cy)), int(glow_radius), int(glow_radius))
 
-        # 2. 繪製馬達金屬外殼
-        painter.setPen(QPen(QColor(51, 65, 85), 4)) # 鋼鐵邊框
+        # 繪製外殼
+        painter.setPen(QPen(QColor(51, 65, 85), 4))
         painter.setBrush(QBrush(QColor(15, 23, 42))) # 深色內部
         painter.drawEllipse(QPoint(int(cx), int(cy)), radius, radius)
 
-        # 3. 繪製動態旋轉轉子 (Rotor)
+        # 繪製轉子
         painter.translate(cx, cy)
         painter.rotate(self.angle)
         painter.setPen(QPen(QColor(148, 163, 184), 3))
@@ -94,7 +94,7 @@ class SciFiMotorWidget(QWidget):
         painter.rotate(-self.angle)
         painter.translate(-cx, -cy)
 
-        # 4. 繪製數據文字
+        # 繪製文字
         font = painter.font()
         font.setBold(True)
         

@@ -262,7 +262,7 @@ class GlockenspielPhysics:
         self.t_solenoid_us = 15_000
         self.h_meters = 0.05
         self.g = 9.81
-        self.SOLENOID_PULSE_MS = 60 # 60ms 極限頻寬
+        self.SOLENOID_PULSE_MS = 60
         self._update_drop_time()
         
     def _update_drop_time(self):
@@ -295,7 +295,7 @@ class GlockenspielPhysics:
                 filtered.append(n)
                 track_last_time[track] = t_us
             else:
-                n.is_ignored = True # 標記為略過，觸發退避機制
+                n.is_ignored = True
                 filtered.append(n)
         return filtered
 
@@ -316,7 +316,7 @@ class StepperMotorProfiler:
         rpm = int((440.0 * (2.0 ** ((pitch - 69) / 12.0))) * 0.3)
         min_f, max_f = self.resonance_band
         if min_f <= rpm <= max_f:
-            # 觸碰共振區間，強制向下折疊一個八度
+            # 避免共振
             return pitch - 12
         return pitch
 

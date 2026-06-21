@@ -29,7 +29,7 @@ class GlockenspielSynthesizer:
             
             for i in range(n_samples):
                 t = float(i) / sample_rate
-                # 使用指數衰減與泛音模擬敲擊感
+                # 模擬敲擊感
                 envelope = math.exp(-4.0 * t) 
                 wave_val = (math.sin(2.0 * math.pi * freq * t) + 
                             0.5 * math.sin(2.0 * math.pi * freq * 2 * t) + 
@@ -64,7 +64,7 @@ class MotorSynthesizer:
         """合成模擬步進馬達電磁脈衝的方波 WAV 檔案"""
         freq = 440.0 * (2.0 ** ((pitch - 69) / 12.0))
         sample_rate = 44100
-        duration = 0.3 # 馬達聲音通常比較短促
+        duration = 0.3
         n_samples = int(sample_rate * duration)
         
         with wave.open(filepath, 'w') as w:
@@ -75,17 +75,17 @@ class MotorSynthesizer:
             for i in range(n_samples):
                 t = float(i) / sample_rate
                 
-                # 使用方波 (Square Wave) 來模擬馬達步進時的強烈電流切換聲
+                # 使用方波模擬馬達
                 wave_val = 1.0 if math.sin(2.0 * math.pi * freq * t) > 0 else -1.0
                 
-                # 加入極短的起音(Attack)與釋音(Release)包絡線，避免爆音(Clicking)
+                # 加入包絡線
                 envelope = 1.0
                 if i < 500: 
                     envelope = i / 500.0
                 elif i > n_samples - 500: 
                     envelope = (n_samples - i) / 500.0
                 
-                # 方波聽覺上非常大聲且刺耳，所以將基礎音量係數調低 (0.15)
+                # 調整音量
                 v = int(wave_val * 32767 * 0.15 * envelope)
                 w.writeframesraw(struct.pack('<h', v))
 
@@ -98,7 +98,7 @@ class MotorSynthesizer:
             
             effect = QSoundEffect()
             effect.setSource(QUrl.fromLocalFile(filepath))
-            effect.setVolume(0.5) # 馬達音量可在此微調
+            effect.setVolume(0.5)
             self.sounds[pitch] = effect
             
         self.sounds[pitch].play()

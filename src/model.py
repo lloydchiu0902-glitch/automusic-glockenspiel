@@ -177,7 +177,7 @@ class AutoMusicModel:
     def calculate_best_transpose(self, notes):
         if not notes: return 0
         
-        # 排除馬達音符，避免馬達低音墊 (Bass Pad) 影響鐵琴的最佳移調計算
+        # 排除馬達音符
         glock_notes = [n for n in notes if not getattr(n, 'is_motor', False)]
         if not glock_notes: return 0
         
@@ -274,19 +274,17 @@ class AutoMusicModel:
 
         for note in self.all_notes:
             if getattr(note, 'is_motor', False):
-                # Stage 3: Motor Resonance Avoidance
                 note.effective_pitch = self.motor_profiler.check_and_fold_pitch(note.effective_pitch)
                 note.duration_us = max(20_000, getattr(note, 'base_duration_us', 200_000))
             else:
                 note.duration_us = 200_000
                 
-        # Stage 3: Glockenspiel Bandwidth Validation (60ms limit)
         self.all_notes = self.physics.filter_dense_notes(self.all_notes)
 
         white_key_hits = sum(1 for n in self.all_notes if n.effective_pitch in GLOCKENSPIEL_MAP)
         self.hit_rate = (white_key_hits / len(self.all_notes)) * 100.0 if self.all_notes else 100.0
 
-        # AOT 時間軸模擬 (滿載過濾與派工)
+        # 時間軸處理
         events = []
         for note in self.all_notes:
             if getattr(note, 'is_ignored', False): continue
@@ -339,7 +337,7 @@ class AutoMusicModel:
 
 
 
-        # Force sort by timeline to prevent Arduino ring buffer congestion
+        # Force sort by timeline
         self.all_notes.sort(key=lambda x: getattr(x, 't_trigger_us', 0))
 
     def import_midi_advanced(self, file_path, mode):
@@ -433,8 +431,8 @@ class AutoMusicModel:
                 final_notes = parsed_notes
 
             elif mode == "ai_midibert":
-                # 🌟 調用第二階段：MidiBERT 半監督架構重構 (微服務呼叫)
-                # 跳過舊版的 process_midi_notes，保留神經網路還原的原始旋律輪廓
+                # 調用 MidiBERT
+                # 保留神經網路還原的原始旋律輪廓
                 final_notes = MidiBERTMicroserviceClient.request_piano_reduction(parsed_notes)
                 
             self.all_notes = final_notes
@@ -498,7 +496,7 @@ class AutoMusicModel:
             events.append({"t_us": 0, "payload": build_packet(0x03, 0, 0, [0,0,0,0])})
             all_notes = getattr(self, 'all_notes', [])
 
-            # Combine simultaneous Glockenspiel notes into bitmask to prevent frequency overflow
+            # Combine simultaneous Glockenspiel notes into bitmask
             glock_groups = {}
             for note in all_notes:
                 if getattr(note, 'is_ignored', False) or getattr(note, 'is_generated', False): continue
