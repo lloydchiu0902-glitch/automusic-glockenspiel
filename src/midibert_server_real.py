@@ -198,7 +198,7 @@ class SemanticLabeler:
         # 數值 1 = 升半音, 2 = 升全音 (一個 Key), 12 = 升八度
         MANUAL_KEY_SHIFT = 12  
         best_shift += MANUAL_KEY_SHIFT
-        logging.info(f"🛠️ [移調資訊] AI 最佳平移: {best_shift - MANUAL_KEY_SHIFT} | 手動抬升: +{MANUAL_KEY_SHIFT} | 總移調: {best_shift}")
+        logging.info(f"🛠 [移調資訊] AI 最佳平移: {best_shift - MANUAL_KEY_SHIFT} | 手動抬升: +{MANUAL_KEY_SHIFT} | 總移調: {best_shift}")
 
         final_notes = []
         
@@ -229,7 +229,7 @@ class SemanticLabeler:
             pitch = note.get("pitch", 60) + best_shift
             
             # 確保馬達的聲音永遠低於鐵琴的最低音 G5 (79)
-            # 💡 如果您覺得馬達聲音太低沉怪異，可以嘗試把 GLOCK_MIN_PITCH 改為 90 或更高
+            #  如果您覺得馬達聲音太低沉怪異，可以嘗試把 GLOCK_MIN_PITCH 改為 90 或更高
             while pitch >= GLOCK_MIN_PITCH:
                 pitch -= 12
             note["pitch"] = pitch

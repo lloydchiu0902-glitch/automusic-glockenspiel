@@ -72,7 +72,7 @@ void setup() {
   Serial3.begin(9600);   
 
   Serial.println("\n=============================================");
-  Serial.println(" 🚀 自動鐵琴機韌體");
+  Serial.println(" 自動鐵琴機韌體");
   Serial.println("=============================================");
 
   pinMode(EN_PIN, OUTPUT);
@@ -95,7 +95,7 @@ void setup() {
     steppers[i]->setAcceleration(2000.0);
   }
 
-  Serial.println("✅ 系統已就緒，等待 Python 同步串流訊號...");
+  Serial.println("系統已就緒，等待 Python 同步串流訊號...");
 }
 
 void loop() {
@@ -145,7 +145,7 @@ void processSerialData() {
           expectedSeqNum = syncSeq + 1;
           head = 0; tail = 0; cmdCount = 0;
           isPlaying = true;
-          Serial.println("🔄 收到 SYNC 同步指令！開始播放！");
+          Serial.println("收到 SYNC 同步指令！開始播放！");
         } 
         else {
           uint16_t receivedSeq = packetBuffer[4] | (packetBuffer[5] << 8);
@@ -181,7 +181,7 @@ void processSerialData() {
              else if (cmdType == 0x05) {
                  byte relayState = packetBuffer[3];
                  digitalWrite(RELAY_PIN, relayState ? HIGH : LOW);
-                 Serial.println(relayState ? "🔌 繼電器 ON" : "🔌 繼電器 OFF");
+                 Serial.println(relayState ? "繼電器 ON" : "繼電器 OFF");
              }
           }
           else if (diff > 0) {
