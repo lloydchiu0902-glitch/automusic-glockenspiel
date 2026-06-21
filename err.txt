@@ -1,1 +1,0 @@
-進階匯入 MIDI 失敗: 請安裝 music21 進行進階樂理分析: pip install music21

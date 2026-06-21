@@ -1,5 +1,8 @@
 # 請在這裡貼上 main.py 的程式碼
 import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+
 import gc
 # pyrefly: ignore [missing-import]
 from PyQt6.QtWidgets import QApplication
