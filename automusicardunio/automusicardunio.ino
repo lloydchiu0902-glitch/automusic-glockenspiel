@@ -1,9 +1,8 @@
 /*
- * 自動鐵琴機 專案 - 論文還原版韌體 (CNC Shield V3 + Arduino Mega)
- * 🌟 嚴格遵循論文 5.1 ~ 5.3 章節設計規範
- * - Active-Low 繼電器邏輯 (HIGH斷電, LOW敲擊)
- * - 9600bps 藍牙透傳通訊
- * - 每次 Loop 最高解析 8 Bytes (防 MCU 卡死)
+ * 自動鐵琴機韌體 (CNC Shield V3 + Arduino Mega)
+ * - Active-Low 繼電器邏輯
+ * - 9600bps 藍牙通訊
+ * - 每次 Loop 最高解析 8 Bytes
  * - 60ms 電磁鐵敲擊脈衝
  */
 
@@ -15,7 +14,7 @@
 const int solenoidPins[15] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
 uint32_t solenoidTurnOffTime[15] = {0}; 
 
-// 🌟 依照論文 5.3 規範：60毫秒敲擊脈衝
+// 60毫秒敲擊脈衝
 const uint32_t SOLENOID_PULSE_MS = 60;  
 
 const int RELAY_PIN = 53;    // 繼電器控制腳位
@@ -69,11 +68,11 @@ inline void stepAll() {
 void setup() {
   Serial.begin(115200);  // 給電腦監控視窗看
   
-  // 🌟 依照論文 5.1 規範：藍牙模組初始化為 9600bps
+  // 藍牙模組初始化為 9600bps
   Serial3.begin(9600);   
 
   Serial.println("\n=============================================");
-  Serial.println(" 🚀 自動鐵琴機 論文還原版韌體 (Active-Low 修正)");
+  Serial.println(" 🚀 自動鐵琴機韌體");
   Serial.println("=============================================");
 
   pinMode(EN_PIN, OUTPUT);
@@ -85,7 +84,7 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, LOW); // 預設關閉繼電器
 
-  // 🌟 配合您修改過的硬體：改回高電位觸發 (Active-High)
+  // 高電位觸發
   for (int i = 0; i < 15; i++) {
     pinMode(solenoidPins[i], OUTPUT);
     digitalWrite(solenoidPins[i], LOW); // LOW = 斷電不敲擊
@@ -111,7 +110,7 @@ void loop() {
 void processSerialData() {
   int bytesProcessed = 0; 
   
-  // 🌟 依照論文 5.2 規範：限制單次迴圈解析量 < 8
+  // 限制單次迴圈解析量 < 8
   while (Serial3.available() > 0 && bytesProcessed < 8) {
     byte b = Serial3.read();
     packetBuffer[packetIndex++] = b;
@@ -237,7 +236,7 @@ void executeBufferedCommands() {
     uint32_t currentUs = micros() - startTimeUs;
     AutoMusicCommand cmd = cmdBuffer[tail];
     
-    // 🌟 依照論文 5.3 規範：timestamp_us == 0 代表測試指令，無條件放行
+    // timestamp_us == 0 代表測試指令，無條件放行
     bool isImmediateTest = (cmd.timestamp_us == 0);
     
     if (isImmediateTest || (isPlaying && currentUs >= cmd.timestamp_us)) {
@@ -264,7 +263,7 @@ void executeBufferedCommands() {
 void fireSolenoids(uint32_t trackMask) {
   for (int i = 0; i < 15; i++) {
     if (trackMask & (1UL << i)) {
-      // 🌟 發射時給予 HIGH 觸發敲擊 (Active-High)
+      // 發射時給予 HIGH 觸發敲擊
       digitalWrite(solenoidPins[i], HIGH); 
       solenoidTurnOffTime[i] = millis() + SOLENOID_PULSE_MS; 
     }
@@ -275,7 +274,7 @@ void updateSolenoids() {
   uint32_t currentMillis = millis();
   for (int i = 0; i < 15; i++) {
     if (solenoidTurnOffTime[i] > 0 && currentMillis >= solenoidTurnOffTime[i]) {
-      // 🌟 到達時間後，自動恢復為 LOW (斷電)
+      // 到達時間後，自動恢復為 LOW (斷電)
       digitalWrite(solenoidPins[i], LOW); 
       solenoidTurnOffTime[i] = 0; 
     }
