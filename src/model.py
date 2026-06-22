@@ -178,19 +178,24 @@ class AutoMusicModel:
     def calculate_best_transpose(self, notes):
         if not notes: return 0
         
-        # 排除馬達音符
-        glock_notes = [n for n in notes if not getattr(n, 'is_motor', False)]
+        # 排除原本就是馬達的音符 (使用我們新增的 original_is_motor)
+        glock_notes = [n for n in notes if not getattr(n, 'original_is_motor', getattr(n, 'is_motor', False))]
         if not glock_notes: return 0
         
         best_offset = 0
         max_hits = -1
-        # Check from -24 to +24
-        for k in range(-24, 25):
-            hits = sum(1 for n in glock_notes if (n.pitch + k) in GLOCKENSPIEL_MAP)
+        black_keys = {1, 3, 6, 8, 10}
+        
+        # Check from -11 to +11 (since it's modulo 12, we just need to find the best key signature)
+        for k in range(-11, 12):
+            # 計算如果平移 k 個半音，有多少音符的「音級 (Pitch Class)」會變成白鍵
+            hits = sum(1 for n in glock_notes if ((n.pitch + k) % 12) not in black_keys)
+            
             # Prefer smaller offsets in case of tie
             if hits > max_hits or (hits == max_hits and abs(k) < abs(best_offset)):
                 max_hits = hits
                 best_offset = k
+                
         return best_offset
 
     def save_state(self):
