@@ -181,6 +181,7 @@ class AutoMusicView(QMainWindow):
     sig_delete = pyqtSignal(list)
     sig_note_added = pyqtSignal(int, int)
     sig_open_settings = pyqtSignal()
+    sig_auto_transpose = pyqtSignal()
     
     sig_select_all = pyqtSignal()
     sig_quantize = pyqtSignal()
@@ -244,6 +245,8 @@ class AutoMusicView(QMainWindow):
 
 
         r3 = QHBoxLayout()
+        self.btn_auto_transpose = QPushButton("自動轉調")
+        self.btn_auto_transpose.setStyleSheet("background-color: #3b82f6; color: white; font-weight: bold;")
         self.slider_transpose = QSlider(Qt.Orientation.Horizontal); self.slider_transpose.setRange(-12, 12); self.slider_transpose.setValue(0); self.slider_transpose.setFixedWidth(80)
         self.lbl_transpose_val = QLabel("+0")
         self.slider_sustain = QSlider(Qt.Orientation.Horizontal); self.slider_sustain.setRange(1, 30); self.slider_sustain.setValue(10); self.slider_sustain.setFixedWidth(80)
@@ -258,7 +261,7 @@ class AutoMusicView(QMainWindow):
         self.chk_motors = [QCheckBox(f"M{i}") for i in range(4)]
         for c in self.chk_motors: c.setChecked(True)
 
-        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val,
+        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val, self.btn_auto_transpose,
                   self.lbl_hit_rate, self.combo_mode] + self.chk_motors:
             r3.addWidget(w)
         r3.addStretch()
@@ -344,6 +347,7 @@ class AutoMusicView(QMainWindow):
         self.btn_ble.clicked.connect(lambda: self.sig_connect_ble.emit(self.input_mac.text().strip()))
         self.btn_disconnect.clicked.connect(self.sig_disconnect_ble.emit)
         self.btn_settings.clicked.connect(self.sig_open_settings.emit)
+        self.btn_auto_transpose.clicked.connect(self.sig_auto_transpose.emit)
         
         self.slider_transpose.valueChanged.connect(self._on_transpose_slider_changed)
         self.slider_sustain.valueChanged.connect(self._on_sustain_change)
