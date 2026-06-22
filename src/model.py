@@ -269,8 +269,8 @@ class AutoMusicModel:
                 if note.effective_pitch in GLOCKENSPIEL_MAP:
                     note.is_motor, note.track_id = False, GLOCKENSPIEL_MAP[note.effective_pitch]
                 else:
-                    closest_pitch = min(GLOCKENSPIEL_MAP.keys(), key=lambda x: abs(x - note.effective_pitch))
-                    note.effective_pitch, note.is_motor, note.track_id = closest_pitch, False, GLOCKENSPIEL_MAP[closest_pitch]
+                    note.is_motor = True
+                    note.track_id = -1
 
         for note in self.all_notes:
             if getattr(note, 'is_motor', False):
