@@ -182,6 +182,7 @@ class AutoMusicView(QMainWindow):
     sig_note_added = pyqtSignal(int, int)
     sig_open_settings = pyqtSignal()
     sig_auto_transpose = pyqtSignal()
+    sig_close_app = pyqtSignal()
     
     sig_select_all = pyqtSignal()
     sig_quantize = pyqtSignal()
@@ -193,6 +194,10 @@ class AutoMusicView(QMainWindow):
         self.resize(1400, 900)
         self.setStyleSheet(MAC_DARK_QSS)
         self.setup_ui()
+
+    def closeEvent(self, event):
+        self.sig_close_app.emit()
+        event.accept()
 
     def _create_bento(self, layout_cls=QVBoxLayout):
         box = QWidget()

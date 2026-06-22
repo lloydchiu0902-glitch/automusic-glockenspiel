@@ -47,6 +47,7 @@ class AutoMusicPresenter(QObject):
         v.sig_manage_songs.connect(self.handle_manage_songs)
         v.sig_open_settings.connect(self.handle_open_settings)
         v.sig_auto_transpose.connect(self.handle_auto_transpose)
+        v.sig_close_app.connect(self.cleanup)
         
         # Connect convert signal
         v.sig_convert.connect(self.handle_convert)
@@ -203,6 +204,14 @@ class AutoMusicPresenter(QObject):
             self.view.slider_transpose.setValue(best_offset)
         else:
             self._log(f"AI Auto-Transpose: 目前設定 ({best_offset:+d}) 已經是最佳白鍵配置，無需移調。", "#10b981")
+
+    def cleanup(self):
+        if self.playback_worker:
+            self.playback_worker.stop()
+            self.playback_worker.wait()
+        if self.ble_worker:
+            self.ble_worker.stop()
+            self.ble_worker.wait()
 
     def handle_import_h(self, path):
         self.model.save_state()
