@@ -142,7 +142,7 @@ class AutoMusicModel:
         
         self.detected_is_minor = False 
         
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.library_dir = os.path.join(base_dir, "Songs")
         os.makedirs(self.library_dir, exist_ok=True)
         
