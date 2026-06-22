@@ -453,10 +453,10 @@ class AutoMusicModel:
                 final_notes = MidiBERTMicroserviceClient.request_piano_reduction(parsed_notes)
                 
             self.all_notes = final_notes
-            best_offset = self.calculate_best_transpose(self.all_notes)
+            # 這裡先不自動移調，僅以原本 UI 的 transpose 為準 (通常為 0)
             self.re_route_all()
                 
-            return True, f"成功載入 {len(parsed_notes)} 個音符", best_offset
+            return True, f"成功載入 {len(parsed_notes)} 個音符", 0
             
         except ConnectionError as ce:
             return False, str(ce), 0
