@@ -46,6 +46,7 @@ class AutoMusicPresenter(QObject):
         v.sig_export_web.connect(self.handle_export_web)
         v.sig_manage_songs.connect(self.handle_manage_songs)
         v.sig_open_settings.connect(self.handle_open_settings)
+        v.sig_auto_transpose.connect(self.handle_auto_transpose)
         
         # Connect convert signal
         v.sig_convert.connect(self.handle_convert)
@@ -180,22 +181,28 @@ class AutoMusicPresenter(QObject):
 
     def handle_import_midi_advanced(self, path, mode):
         self.model.save_state()
-        success, err, best_offset = self.model.import_midi_advanced(path, mode)
+        success, err, _ = self.model.import_midi_advanced(path, mode)
         if success:
             self._log(f"MIDI imported: {path.split('/')[-1]}", "#569cd6")
             if getattr(self.model, 'detected_is_minor', False):
                 self._log("AI Analysis: Detected minor key. Intelligent parallel modulation available.", "#a855f7")
             
-            if best_offset != 0:
-                self._log(f"AI Auto-Transpose: 偵測到最佳移調為 {best_offset:+d} 半音，已自動套用以最大化鐵琴打擊率。", "#10b981")
-                self.view.slider_transpose.setValue(best_offset)
-            else:
-                self.view.slider_transpose.setValue(0)
+            self.view.slider_transpose.setValue(0)
                 
             self._refresh_view()
             self.view.update_playhead(0)
         else:
             self.view.show_message("匯入失敗", err, True)
+
+    def handle_auto_transpose(self):
+        best_offset = self.model.calculate_best_transpose(self.model.all_notes)
+        current_offset = self.view.slider_transpose.value()
+        
+        if best_offset != current_offset:
+            self._log(f"AI Auto-Transpose: 偵測到最佳移調為 {best_offset:+d} 半音，已自動套用以最大化白鍵打擊率。", "#10b981")
+            self.view.slider_transpose.setValue(best_offset)
+        else:
+            self._log(f"AI Auto-Transpose: 目前設定 ({best_offset:+d}) 已經是最佳白鍵配置，無需移調。", "#10b981")
 
     def handle_import_h(self, path):
         self.model.save_state()
