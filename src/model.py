@@ -27,6 +27,7 @@ def new_clone(self):
     n = original_clone(self)
     n.velocity = getattr(self, 'velocity', 100) 
     n.is_motor = getattr(self, 'is_motor', False)
+    n.original_is_motor = getattr(self, 'original_is_motor', n.is_motor)
     n.track_id = getattr(self, 'track_id', 0)
     n.motor_id = getattr(self, 'motor_id', 0)
     n.is_ignored = getattr(self, 'is_ignored', False)
@@ -257,12 +258,18 @@ class AutoMusicModel:
         total_offset = c.get('transpose', 0)
 
         for note in self.all_notes:
+            if not hasattr(note, 'original_is_motor'):
+                note.original_is_motor = getattr(note, 'is_motor', False)
+            
             note.is_ignored = False
             note.accel_val = 2000
             note.effective_pitch = note.pitch + total_offset
+            
+            # Reset back to its original state before doing routing
+            note.is_motor = note.original_is_motor
 
         for note in self.all_notes:
-            if getattr(note, 'is_motor', False): continue
+            if note.original_is_motor: continue
             if c.get('mode_idx', 0) == 1: 
                 note.is_motor, note.track_id = True, -1
             else:
