@@ -182,6 +182,7 @@ class AutoMusicView(QMainWindow):
     sig_note_added = pyqtSignal(int, int)
     sig_open_settings = pyqtSignal()
     sig_auto_transpose = pyqtSignal()
+    sig_toggle_oob_mode = pyqtSignal()
     sig_close_app = pyqtSignal()
     
     sig_select_all = pyqtSignal()
@@ -252,6 +253,9 @@ class AutoMusicView(QMainWindow):
         r3 = QHBoxLayout()
         self.btn_auto_transpose = QPushButton("自動轉調")
         self.btn_auto_transpose.setStyleSheet("background-color: #3b82f6; color: white; font-weight: bold;")
+        self.btn_oob_mode = QPushButton("🔄 超音域: 邊界吸附")
+        self.btn_oob_mode.clicked.connect(self.sig_toggle_oob_mode.emit)
+        
         self.slider_transpose = QSlider(Qt.Orientation.Horizontal); self.slider_transpose.setRange(-12, 12); self.slider_transpose.setValue(0); self.slider_transpose.setFixedWidth(80)
         self.lbl_transpose_val = QLabel("+0")
         self.slider_sustain = QSlider(Qt.Orientation.Horizontal); self.slider_sustain.setRange(1, 30); self.slider_sustain.setValue(10); self.slider_sustain.setFixedWidth(80)
@@ -266,7 +270,7 @@ class AutoMusicView(QMainWindow):
         self.chk_motors = [QCheckBox(f"M{i}") for i in range(4)]
         for c in self.chk_motors: c.setChecked(True)
 
-        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val, self.btn_auto_transpose,
+        for w in [QLabel("移調:"), self.slider_transpose, self.lbl_transpose_val, self.btn_auto_transpose, self.btn_oob_mode,
                   self.lbl_hit_rate, self.combo_mode] + self.chk_motors:
             r3.addWidget(w)
         r3.addStretch()
@@ -393,6 +397,37 @@ class AutoMusicView(QMainWindow):
         f, _ = QFileDialog.getSaveFileName(self, "匯出網頁播放檔", "", "JSON Files (*.json)")
         if f:
             self.sig_export_web.emit(f)
+
+    def sync_ui_from_config(self, config):
+        self.combo_mode.setCurrentIndex(config.get('mode_idx', 0))
+        for i, chk in enumerate(self.chk_motors): chk.setChecked(i in config.get('active_motors', []))
+        t = config.get('transpose', 0)
+        self.slider_transpose.blockSignals(True)
+        self.slider_transpose.setValue(t)
+        self.slider_transpose.blockSignals(False)
+        self.lbl_transpose_val.setText(f"{t:+d}")
+        
+        arp = config.get('arp_speed_ms', 10)
+        self.slider_arp_speed.blockSignals(True)
+        self.slider_arp_speed.setValue(arp)
+        self.slider_arp_speed.blockSignals(False)
+        self.lbl_arp_speed.setText(f"{arp}ms")
+        
+        gt = config.get('gate_time', 100)
+        self.slider_gate_time.blockSignals(True)
+        self.slider_gate_time.setValue(gt)
+        self.slider_gate_time.blockSignals(False)
+        self.lbl_gate_time.setText(f"{gt}%")
+
+        self.update_oob_btn_text(config.get('oob_mode', 'snap'))
+        
+    def update_oob_btn_text(self, mode):
+        if mode == 'motor':
+            self.btn_oob_mode.setText("🔄 超音域: 交給馬達")
+            self.btn_oob_mode.setStyleSheet("background-color: #8b5cf6; color: white; font-weight: bold;")
+        else:
+            self.btn_oob_mode.setText("🔄 超音域: 邊界吸附")
+            self.btn_oob_mode.setStyleSheet("")
 
     def _on_library_selected(self, index):
         if index > 0: self.sig_load_song.emit(self.combo_library.currentText())

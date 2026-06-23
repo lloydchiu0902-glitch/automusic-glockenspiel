@@ -172,7 +172,8 @@ class AutoMusicModel:
             'active_motors': [0, 1, 2, 3],
             'transpose': 0,
             'arp_speed_ms': 10,
-            'gate_time': 100
+            'gate_time': 100,
+            'oob_mode': 'snap'
         }
 
     def calculate_best_transpose(self, notes):
@@ -273,10 +274,13 @@ class AutoMusicModel:
             # Reset back to its original state before doing routing
             note.is_motor = note.original_is_motor
 
+        oob_mode = self.config.get('oob_mode', 'snap')
+
         for note in self.all_notes:
-            if note.original_is_motor: continue
-            if c.get('mode_idx', 0) == 1: 
-                note.is_motor, note.track_id = True, -1
+            # 優先尊重使用者指定的強制馬達
+            if getattr(note, 'original_is_motor', False):
+                note.is_motor = True
+                note.track_id = -1
             else:
                 is_black = (note.effective_pitch % 12) in {1, 3, 6, 8, 10}
                 if is_black:
@@ -286,8 +290,12 @@ class AutoMusicModel:
                     if note.effective_pitch in GLOCKENSPIEL_MAP:
                         note.is_motor, note.track_id = False, GLOCKENSPIEL_MAP[note.effective_pitch]
                     else:
-                        closest_pitch = min(GLOCKENSPIEL_MAP.keys(), key=lambda x: abs(x - note.effective_pitch))
-                        note.effective_pitch, note.is_motor, note.track_id = closest_pitch, False, GLOCKENSPIEL_MAP[closest_pitch]
+                        if oob_mode == 'motor':
+                            note.is_motor = True
+                            note.track_id = -1
+                        else:
+                            closest_pitch = min(GLOCKENSPIEL_MAP.keys(), key=lambda x: abs(x - note.effective_pitch))
+                            note.effective_pitch, note.is_motor, note.track_id = closest_pitch, False, GLOCKENSPIEL_MAP[closest_pitch]
 
         for note in self.all_notes:
             if getattr(note, 'is_motor', False):
