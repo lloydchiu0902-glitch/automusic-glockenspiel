@@ -94,7 +94,12 @@ class BLEWorker(QThread):
                 
                 while self.is_running:
                     packet = await self.packet_queue.get()
-                    if not self.is_running: break
+                    if not self.is_running:
+                        try:
+                            await client.disconnect()
+                        except:
+                            pass
+                        break
                     if packet:
                         try:
                             await client.write_gatt_char(self.char_uuid, packet, response=not can_write_without_response)

@@ -47,7 +47,6 @@ class AutoMusicPresenter(QObject):
         v.sig_manage_songs.connect(self.handle_manage_songs)
         v.sig_open_settings.connect(self.handle_open_settings)
         v.sig_auto_transpose.connect(self.handle_auto_transpose)
-        v.sig_toggle_oob_mode.connect(self.handle_toggle_oob_mode)
         v.sig_close_app.connect(self.cleanup)
         
         # Connect convert signal
@@ -120,6 +119,7 @@ class AutoMusicPresenter(QObject):
                 self._log("Playback stopped.", "#f59e0b")
                 
             self.playback_worker.stop()
+            self.playback_worker.wait()
             self.playback_worker = None
             return
             
@@ -157,6 +157,7 @@ class AutoMusicPresenter(QObject):
     def handle_finish(self):
         if self.playback_worker:
             self.playback_worker.stop()
+            self.playback_worker.wait()
             self.playback_worker = None
         self.paused_time_us = 0
         self.view.update_playhead(0)
@@ -205,17 +206,6 @@ class AutoMusicPresenter(QObject):
             self.view.slider_transpose.setValue(best_offset)
         else:
             self._log(f"AI Auto-Transpose: 目前設定 ({best_offset:+d}) 已經是最佳白鍵配置，無需移調。", "#10b981")
-
-    def handle_toggle_oob_mode(self):
-        current_mode = self.model.config.get('oob_mode', 'snap')
-        new_mode = 'motor' if current_mode == 'snap' else 'snap'
-        self.model.config['oob_mode'] = new_mode
-        self.model.re_route_all()
-        self.view.update_oob_btn_text(new_mode)
-        self._refresh_view()
-        
-        mode_str = "全部分流至馬達" if new_mode == 'motor' else "強制吸附邊緣琴鍵"
-        self._log(f"系統設定: 鐵琴超音域處理模式已切換為「{mode_str}」。", "#3b82f6")
 
     def cleanup(self):
         if self.playback_worker:
